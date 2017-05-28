@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+function main {
+  local shome="$(cd -P -- "${BASH_SOURCE%/*}/.." && pwd -P)"
+  source "$shome/script/profile"
+
+  if [[ "$#" == 0 ]]; then
+    set -- default
+  fi
+
+  case "${1:-}" in
+    default)
+      cd "$shome"
+
+      if [[ "${SERVICE_8500_NAME:-}" == "consul" ]]; then
+        set -- -bootstrap
+      else
+        set -- -join consul
+      fi
+
+      local pth_data="$shome/data-$(facts '.default_ipv4.address')"
+      exec consul agent -disable-host-node-id -config-dir="/config/consul" -client 0.0.0.0 -server -data-dir="$pth_data" -node "${SERVICE:+${SERVICE}-}$(uname -n)" "$@"
+      ;;
+    *)
+      echo "ERROR: unknown server command: ${1:-/not-supplied/}" 1>&2
+      return 1
+      ;;
+  esac
+}
+
+main "$@"
