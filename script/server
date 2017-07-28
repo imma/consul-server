@@ -11,15 +11,9 @@ function main {
   case "${1:-}" in
     default)
       cd "$shome"
-
-      if [[ "${SERVICE_8500_NAME:-}" == "consul" ]]; then
-        set -- -bootstrap
-      else
-        set -- -join consul
-      fi
-
+      set -- -bootstrap
       local pth_data="$shome/data-$(facts '.default_ipv4.address')"
-      exec consul agent -disable-host-node-id -config-dir="/config/consul" -client 0.0.0.0 -server -data-dir="$pth_data" -node "${SERVICE:+${SERVICE}-}$(uname -n)" "$@"
+      exec consul agent -disable-host-node-id -config-dir="$shome/etc" -client 0.0.0.0 -server -data-dir="$pth_data" -node "${SERVICE:+${SERVICE}-}$(uname -n)" "$@"
       ;;
     *)
       echo "ERROR: unknown server command: ${1:-/not-supplied/}" 1>&2
