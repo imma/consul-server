@@ -13,7 +13,8 @@ function main {
       cd "$shome"
       set -- -bootstrap
       local pth_data="$shome/data-$(facts '.default_ipv4.address')"
-      exec consul agent -disable-host-node-id -config-dir="$shome/etc" -client 0.0.0.0 -server -data-dir="$pth_data" -node "${SERVICE:+${SERVICE}-}$(uname -n)" "$@"
+      local ip_client="$(runmany 'ifconfig $1 2>/dev/null || true' eth0 ens3 enp0s8 vboxnet0 | grep 'inet ' | awk '{print $2}' | cut -d: -f2)"
+      exec consul agent -disable-host-node-id -config-dir="$shome/etc" -client 0.0.0.0 -server -data-dir="$pth_data" -node "${SERVICE:+${SERVICE}-}$(uname -n)" -advertise "$ip_client" "$@"
       ;;
     *)
       echo "ERROR: unknown server command: ${1:-/not-supplied/}" 1>&2
